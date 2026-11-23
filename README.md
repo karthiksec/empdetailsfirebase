@@ -35,29 +35,6 @@ Registeration Number : 212223220043
 
 */
 ```
-## Emp class
-```
-package com.example.ex_01_realtimedatabase;
-
-import com.google.firebase.database.IgnoreExtraProperties;
-
-@IgnoreExtraProperties
-public class Emp {
-    public String name;
-    public String age;
-    public String salary;
-
-    public Emp() {
-        // Default constructor required for calls to DataSnapshot.getValue(Emp.class)
-    }
-
-    public Emp(String name, String age, String salary) {
-        this.name = name;
-        this.age = age;
-        this.salary = salary;
-    }
-}
-```
 ## Main Activity 
 ```
 package com.example.firebase;
