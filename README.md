@@ -61,14 +61,14 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextInputEditText etName, etRegNo;
+    private TextInputEditText etName, etAge, etSalary;
     private MaterialButton btnAdd, btnClearAll;
-    private RecyclerView rvStudents;
+    private RecyclerView rvRecords;
     private TextView tvEmptyState;
 
     private DatabaseHelper dbHelper;
-    private StudentAdapter adapter;
-    private List<Student> studentList;
+    private RecordAdapter adapter;
+    private List<UserRecord> recordList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,38 +87,39 @@ public class MainActivity extends AppCompatActivity {
 
         // Bind UI Elements
         etName = findViewById(R.id.etName);
-        etRegNo = findViewById(R.id.etRegNo);
+        etAge = findViewById(R.id.etAge);
+        etSalary = findViewById(R.id.etSalary);
         btnAdd = findViewById(R.id.btnAdd);
         btnClearAll = findViewById(R.id.btnClearAll);
-        rvStudents = findViewById(R.id.rvStudents);
+        rvRecords = findViewById(R.id.rvRecords);
         tvEmptyState = findViewById(R.id.tvEmptyState);
 
         // Setup RecyclerView & Adapter
-        studentList = new ArrayList<>();
-        adapter = new StudentAdapter(studentList, student -> {
-            boolean deleted = dbHelper.deleteStudent(student.getId());
+        recordList = new ArrayList<>();
+        adapter = new RecordAdapter(recordList, record -> {
+            boolean deleted = dbHelper.deleteRecord(record.getId());
             if (deleted) {
-                Toast.makeText(MainActivity.this, "Entry deleted", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Record deleted", Toast.LENGTH_SHORT).show();
                 loadDatabaseRecords();
             } else {
-                Toast.makeText(MainActivity.this, "Failed to delete entry", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Failed to delete record", Toast.LENGTH_SHORT).show();
             }
         });
 
-        rvStudents.setLayoutManager(new LinearLayoutManager(this));
-        rvStudents.setAdapter(adapter);
+        rvRecords.setLayoutManager(new LinearLayoutManager(this));
+        rvRecords.setAdapter(adapter);
 
         // Add Button Listener
-        btnAdd.setOnClickListener(v -> addStudentEntry());
+        btnAdd.setOnClickListener(v -> addRecordEntry());
 
         // Clear All Button Listener
         btnClearAll.setOnClickListener(v -> {
-            if (studentList.isEmpty()) {
+            if (recordList.isEmpty()) {
                 Toast.makeText(MainActivity.this, "Database is already empty", Toast.LENGTH_SHORT).show();
                 return;
             }
-            dbHelper.clearAllStudents();
-            Toast.makeText(MainActivity.this, "All entries cleared", Toast.LENGTH_SHORT).show();
+            dbHelper.clearAllRecords();
+            Toast.makeText(MainActivity.this, "All records cleared", Toast.LENGTH_SHORT).show();
             loadDatabaseRecords();
         });
 
@@ -126,49 +127,85 @@ public class MainActivity extends AppCompatActivity {
         loadDatabaseRecords();
     }
 
-    private void addStudentEntry() {
+    private void addRecordEntry() {
         String name = etName.getText() != null ? etName.getText().toString().trim() : "";
-        String regNo = etRegNo.getText() != null ? etRegNo.getText().toString().trim() : "";
+        String ageStr = etAge.getText() != null ? etAge.getText().toString().trim() : "";
+        String salaryStr = etSalary.getText() != null ? etSalary.getText().toString().trim() : "";
 
         if (TextUtils.isEmpty(name)) {
-            etName.setError("Please enter your name");
+            etName.setError("Please enter full name");
             etName.requestFocus();
             return;
         }
 
-        if (TextUtils.isEmpty(regNo)) {
-            etRegNo.setError("Please enter registration number");
-            etRegNo.requestFocus();
+        if (TextUtils.isEmpty(ageStr)) {
+            etAge.setError("Please enter age");
+            etAge.requestFocus();
             return;
         }
 
-        boolean success = dbHelper.addStudent(name, regNo);
+        int age;
+        try {
+            age = Integer.parseInt(ageStr);
+            if (age <= 0 || age > 120) {
+                etAge.setError("Please enter a valid age");
+                etAge.requestFocus();
+                return;
+            }
+        } catch (NumberFormatException e) {
+            etAge.setError("Invalid age format");
+            etAge.requestFocus();
+            return;
+        }
+
+        if (TextUtils.isEmpty(salaryStr)) {
+            etSalary.setError("Please enter salary");
+            etSalary.requestFocus();
+            return;
+        }
+
+        double salary;
+        try {
+            salary = Double.parseDouble(salaryStr);
+            if (salary < 0) {
+                etSalary.setError("Salary cannot be negative");
+                etSalary.requestFocus();
+                return;
+            }
+        } catch (NumberFormatException e) {
+            etSalary.setError("Invalid salary format");
+            etSalary.requestFocus();
+            return;
+        }
+
+        boolean success = dbHelper.addRecord(name, age, salary);
         if (success) {
-            Toast.makeText(this, "Added to database!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Record saved to database!", Toast.LENGTH_SHORT).show();
             etName.setText("");
-            etRegNo.setText("");
+            etAge.setText("");
+            etSalary.setText("");
             etName.clearFocus();
-            etRegNo.clearFocus();
+            etAge.clearFocus();
+            etSalary.clearFocus();
             loadDatabaseRecords();
         } else {
-            Toast.makeText(this, "Error saving to database", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Error saving record", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void loadDatabaseRecords() {
-        studentList = dbHelper.getAllStudents();
-        adapter.updateData(studentList);
+        recordList = dbHelper.getAllRecords();
+        adapter.updateData(recordList);
 
-        if (studentList.isEmpty()) {
+        if (recordList.isEmpty()) {
             tvEmptyState.setVisibility(View.VISIBLE);
-            rvStudents.setVisibility(View.GONE);
+            rvRecords.setVisibility(View.GONE);
         } else {
             tvEmptyState.setVisibility(View.GONE);
-            rvStudents.setVisibility(View.VISIBLE);
+            rvRecords.setVisibility(View.VISIBLE);
         }
     }
 }
-
 ```
 ## Activity_XML
 ```
@@ -235,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
 ```
 ## OUTPUT
 
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/345c5307-7a5b-4bce-8fbd-f3867aced000" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/963a31a8-3a8f-4897-821a-8f1a0d2c7a83" />
 
 
 ## RESULT
